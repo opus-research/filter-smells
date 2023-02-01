@@ -15,7 +15,7 @@ public class SmellFilter {
     public static void main(String[] args) {
 
         SmellFilter filter = new SmellFilter();
-        String projectName = "";
+        String projectName = "hikaricp";
         List<CodeSmell> smells = filter.getSmellsFromJson("smells-"+ projectName +".json");
         int quantityAnalyzedSmells = smells.size();
         List<CodeSmell> lemList = filter.findLongEnviousMethod(smells, quantityAnalyzedSmells);
@@ -105,6 +105,32 @@ public class SmellFilter {
         }
 
         return lemList;
+    }
+
+
+    private boolean validateSmell(CodeSmell smell){
+        return smell.getName() != null && smell.getCodeElement()!= null && smell.getCommit()!= null;
+    }
+    private List<CodeSmell> findLongSignedClone(List<CodeSmell> longMethods, List<CodeSmell> duplicatedMethods){
+        List<CodeSmell> longSignedClones = new ArrayList<>();
+        for (int i = 0; i < longMethods.size(); i++) {
+            for (int j = 0; j < duplicatedMethods.size(); j++) {
+
+                CodeSmell longMethod = longMethods.get(i);
+                CodeSmell duplicatedMethod = duplicatedMethods.get(j);
+
+                if(validateSmell(longMethod) && validateSmell(duplicatedMethod) &&
+                        duplicatedMethod.getCodeElement().equals(longMethod.getCodeElement()) &&
+                        duplicatedMethod.getCommit().equals(longMethod.getCommit())){
+
+                    longMethod.addAgglomeratedSmells(duplicatedMethod.getName());
+                    longSignedClones.add(longMethod);
+
+                }
+            }
+        }
+
+        return longSignedClones;
     }
 
 }
